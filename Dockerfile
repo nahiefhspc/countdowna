@@ -16,5 +16,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire application code into the container
 COPY . /app/
 
+# Expose the port (8080) to ensure the health check passes
+EXPOSE 8080
+
+# Add a simple health check (this assumes your app is listening on port 8080)
+HEALTHCHECK CMD curl --fail http://localhost:8080/health || exit 1
+
 # Command to run the bot application
 CMD ["python3", "main.py"]
