@@ -1,20 +1,20 @@
-# Use an official Python runtime as the base image
-FROM python:3.9-slim
+# Use a lightweight Python image
+FROM python:3.10-slim
+
+# Set environment variables to ensure the application runs properly
+ENV PYTHONUNBUFFERED=1
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements.txt file into the container at /app
+# Copy the requirements.txt file into the container
 COPY requirements.txt /app/
 
-# Install dependencies
+# Install the necessary dependencies from requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the current directory contents into the container at /app
+# Copy the entire application code into the container
 COPY . /app/
 
-# Set environment variable for bot token (you can also use Koyeb secrets for this)
-ENV TELEGRAM_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
-
-# Run the Python script when the container starts
+# Command to run the bot application
 CMD ["python3", "main.py"]
