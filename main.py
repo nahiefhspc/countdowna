@@ -75,7 +75,7 @@ def main():
     application.job_queue.run_once(lambda context: send_countdown(context), when=datetime.timedelta(seconds=5))
 
     # Start the Telegram bot in a non-blocking way
-    application.run_polling(allowed_updates=Update.ALL_TYPES, block=False)
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
     # Run the Flask web service
     app.run(host="0.0.0.0", port=8080)
