@@ -1,3 +1,4 @@
+from flask import Flask, jsonify
 from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, CallbackContext, ContextTypes
 import datetime
@@ -5,15 +6,21 @@ import asyncio
 
 # Define exam dates
 EXAMS = {
-    "😖JEE MAIN APRIL ATTEMPT": datetime.date(2025, 4, 1),
-    "🥵JEE ADVANCED 2025": datetime.date(2025, 5, 18),
-    "😐BITSAT 2025": datetime.date(2025, 5, 26),
-    "🙄COMEDK 2025": datetime.date(2025, 5, 10),
-    "🥺NEET 2025": datetime.date(2025, 5, 4),
-    "😢CUET 2025": datetime.date(2025, 5, 15),
+    "JEE MAIN APRIL ATTEMPT": datetime.date(2025, 4, 1),
+    "JEE ADVANCED 2025": datetime.date(2025, 5, 18),
+    "BITSAT 2025": datetime.date(2025, 5, 26),
+    "COMEDK 2025": datetime.date(2025, 5, 10),
+    "NEET 2025": datetime.date(2025, 5, 4),
+    "CUET 2025": datetime.date(2025, 5, 15),
 }
 
 CHANNEL_ID = "-1002472817328"  # Replace with your actual channel username
+app = Flask(__name__)
+
+# Flask health check endpoint for Docker
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "OK"}), 200
 
 
 def days_left(exam_date):
@@ -23,11 +30,11 @@ def days_left(exam_date):
 
 
 def get_exam_countdown():
-    countdown_text = "<b>🥶 𝔼𝕏𝔸𝕄 ℂ𝕆𝕌ℕ𝕋𝔻𝕆𝕎ℕ 😨\n⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆\n⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆</b>\n"
+    countdown_text = "<b>\U0001F4C5 Exam Countdown:</b>\n"
     for exam, date in EXAMS.items():
         days = days_left(date)
         if days >= 0:
-            countdown_text += f"<b>{exam}</b>\n<b>🏅 𝗗𝗮𝘆𝘀 »» <i>{days} left </i>\n-------------------------------------</b>\n"
+            countdown_text += f"<b>{exam}:</b> {days} days left\n"
     return countdown_text
 
 
@@ -53,16 +60,25 @@ async def daily_update(context: ContextTypes.DEFAULT_TYPE):
 def main():
     TOKEN = "6811502626:AAG9xT3ZQUmg6CrdIPvQ0kCRJ3W5QL-fuZs"
     application = Application.builder().token(TOKEN).build()
-    
+
+    # Ensure that job_queue is initialized before use
+    if application.job_queue is None:
+        raise Exception("JobQueue not initialized properly.")
+
+    # Add /start command handler
     application.add_handler(CommandHandler("start", start))
-    
+
     # Run the daily update job every 24 hours, starting from 5 seconds after the bot starts
-    application.job_queue.run_once(daily_update, when=datetime.timedelta(seconds=54000))
-    
+    application.job_queue.run_once(daily_update, when=datetime.timedelta(seconds=5))
+
     # Send immediate countdown message when the bot starts
-    application.job_queue.run_once(lambda context: send_countdown(context), when=datetime.timedelta(seconds=2))
-    
-    application.run_polling()
+    application.job_queue.run_once(lambda context: send_countdown(context), when=datetime.timedelta(seconds=5))
+
+    # Start the Telegram bot in a non-blocking way
+    application.run_polling(allowed_updates=Update.ALL_TYPES, block=False)
+
+    # Run the Flask web service
+    app.run(host="0.0.0.0", port=8080)
 
 
 if __name__ == "__main__":
