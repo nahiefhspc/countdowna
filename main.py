@@ -13,7 +13,7 @@ EXAMS = {
     "😢CUET 2025": datetime.date(2025, 5, 15),
 }
 
-CHANNEL_ID = "@HIDDEN_OFFICIALS_3"  # Replace with your actual channel username
+CHANNEL_ID = "-1002472817328"  # Replace with your actual channel username
 
 
 def days_left(exam_date):
